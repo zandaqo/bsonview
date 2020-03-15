@@ -163,13 +163,6 @@ class BSONView extends ObjectView {
     return false;
   }
 
-  /**
-   * Returns an Object corresponding to a given view.
-   *
-   * @param {View} view
-   * @param {number} [start=0]
-   * @returns {Object}
-   */
   static toBSON(view, start = 0) {
     const { fields, schema } = this;
     const result = {};

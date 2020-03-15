@@ -1,13 +1,29 @@
 {
   "name": "bsonview",
   "version": "0.1.0",
-  "description": "",
+  "description": "Schema-based BSON using structurae's ObjectView binary protocol.",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "directories": {
+    "lib": "lib"
   },
-  "author": "",
-  "license": "ISC",
+  "files": [
+    "/lib/"
+  ],
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint ./lib/*.js ./*.js",
+    "benchmark": "node bench.js"
+  },
+  "author": "Maga D. Zandaqo <denelxan@gmail.com> (http://maga.name)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zandaqo/bsonview.git"
+  },
+  "homepage": "https://github.com/zandaqo/bsonview#readme",
+  "bugs": {
+    "url": "https://github.com/zandaqo/bsonview/issues"
+  },
   "dependencies": {
     "structurae": "^2.3.0"
   },
@@ -26,8 +42,7 @@
     "collectCoverageFrom": [
       "**/index.js",
       "**/lib/**",
-      "!**/node_modules/**",
-      "!**/test/**"
+      "!**/node_modules/**"
     ],
     "coverageDirectory": "<rootDir>/coverage",
     "coverageReporters": [
