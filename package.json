@@ -1,6 +1,6 @@
 {
   "name": "bsonview",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Schema-based BSON using structurae's ObjectView binary protocol.",
   "main": "index.js",
   "directories": {
@@ -25,7 +25,7 @@
     "url": "https://github.com/zandaqo/bsonview/issues"
   },
   "dependencies": {
-    "structurae": "^2.3.0"
+    "structurae": "^3.0.0"
   },
   "devDependencies": {
     "benchmark": "^2.1.4",

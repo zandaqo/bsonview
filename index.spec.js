@@ -5,18 +5,27 @@ const BSONView = require('./index')(BSON);
 global.BSON = BSON;
 
 const SomeView = ObjectViewMixin({
-  a: { type: 'uint8' },
-  b: { type: 'double', default: 4 },
-  c: { type: 'double', size: 2, default: [1, 3] },
-  d: { type: 'binary', length: 5 },
-  e: { type: 'objectId' },
-  f: { type: 'boolean', default: true },
-  g: { type: 'date' },
-  h: { type: 'regex', length: 6 },
-  i: { type: 'javascript', length: 10 },
-  j: { type: 'timestamp' },
-  k: { type: 'int' },
-  l: { type: 'long' },
+  $id: 'SomeBson',
+  type: 'object',
+  properties: {
+    a: { type: 'integer', btype: 'uint8' },
+    b: { type: 'double', default: 4 },
+    c: {
+      type: 'array',
+      maxItems: 2,
+      items: { type: 'double' },
+      default: [1, 3],
+    },
+    d: { type: 'binary', maxLength: 5 },
+    e: { type: 'objectId' },
+    f: { type: 'boolean', default: true },
+    g: { type: 'date' },
+    h: { type: 'regex', maxLength: 6 },
+    i: { type: 'javascript', maxLength: 10 },
+    j: { type: 'timestamp' },
+    k: { type: 'int' },
+    l: { type: 'long' },
+  },
 }, BSONView);
 
 const defaultView = {
@@ -101,9 +110,9 @@ describe('BSONView', () => {
         g: new Date(),
         h: new RegExp('abc', 'i'),
         i: 'var a = 10',
-        j: 0n,
+        j: 110n,
         k: 156,
-        l: 0n,
+        l: 110n,
       };
       const view = SomeView.from(json);
       const bson = view.toBSON();
@@ -111,6 +120,9 @@ describe('BSONView', () => {
         ...json,
         d: new BSON.Binary(json.d),
         e: new BSON.ObjectId(json.e),
+        i: new BSON.Code(json.i),
+        j: BSON.Timestamp.fromString(json.j.toString(), 10),
+        l: BSON.Long.fromString(json.l.toString()),
       };
       expect(bson).toEqual(expected);
     });

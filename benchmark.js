@@ -1,4 +1,4 @@
-const { ArrayViewMixin } = require('structurae');
+const { ArrayViewMixin, ObjectViewMixin } = require('structurae');
 const BSON = require('bson');
 const Benchmark = require('benchmark');
 const jsf = require('json-schema-faker');
@@ -22,7 +22,9 @@ const getIndex = (size) => (Math.random() * size) | 0;
 const JSONSchema = {
   type: 'object',
   properties: {
-    type: { type: 'integer', minimum: 0, maximum: 255 },
+    type: {
+      type: 'integer', btype: 'uint8', minimum: 0, maximum: 255,
+    },
     id: { type: 'integer' },
     name: { type: 'string', minLength: 5, maxLength: 50 },
     weight: { type: 'number' },
@@ -41,16 +43,7 @@ const JSONSchema = {
   required: ['type', 'id', 'name', 'weight', 'height', 'scores'],
 };
 
-class CView extends BSONView {}
-CView.schema = {
-  type: { type: 'uint8' },
-  id: { type: 'int' },
-  name: { type: 'string', length: 50 },
-  weight: { type: 'double' },
-  height: { type: 'double' },
-  scores: { type: 'int', size: 50 },
-};
-CView.initialize();
+const CView = ObjectViewMixin(JSONSchema, BSONView);
 
 const objects = [];
 const bsons = [];
@@ -85,8 +78,8 @@ const suits = [
       return CView.from(bson, tempView);
     })
     .add('View to JSON', () => {
-      const view = views.get(getIndex(100));
-      return view.toJSON();
+      const index = getIndex(100);
+      return CView.toJSON(views, Views.itemLength * index);
     }),
 ];
 

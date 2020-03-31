@@ -1,9 +1,13 @@
 const {
-  ObjectView, StringView, TypeViewMixin, TypedArrayViewMixin, ArrayViewMixin,
+  ObjectView, StringView, TypeViewMixin, BooleanView,
 } = require('structurae');
 const ObjectIdView = require('./lib/objectid-view');
 const DateView = require('./lib/date-view');
 const RegexView = require('./lib/regex-view');
+const BinaryView = require('./lib/binary-view');
+const CodeView = require('./lib/code-view');
+const LongView = require('./lib/long-view');
+const TimestampView = require('./lib/timestamp-view');
 
 const BSONTypes = {
   0x01: 1, // double
@@ -109,7 +113,7 @@ class BSONView extends ObjectView {
       } else {
         const fieldName = this.getFieldName(bson.subarray(nameStart, nameEnd), View);
         hasValue = fieldName && valueLength;
-        const fieldOptions = View.schema[fieldName];
+        const fieldOptions = View.layout[fieldName];
         start = fieldOptions.start;
         fieldLength = fieldOptions.length;
         SubView = fieldOptions.View;
@@ -164,15 +168,13 @@ class BSONView extends ObjectView {
   }
 
   static toBSON(view, start = 0) {
-    const { fields, schema } = this;
+    const { fields, layout } = this;
     const result = {};
     for (let i = 0; i < fields.length; i++) {
       const name = fields[i];
-      const {
-        BSON, View, start: fieldStart, length: fieldLength,
-      } = schema[name];
-      const json = View.toJSON(view, start + fieldStart, fieldLength);
-      result[name] = BSON ? new BSON(json) : json;
+      const { View, start: fieldStart, length: fieldLength } = layout[name];
+      result[name] = View.toBSON ? View.toBSON(view, start + fieldStart, fieldLength)
+        : View.toJSON(view, start + fieldStart, fieldLength);
     }
     return result;
   }
@@ -180,72 +182,59 @@ class BSONView extends ObjectView {
 
 BSONView.types = {
   ...ObjectView.types,
-  double(field) {
-    const { size } = field;
-    field.View = size ? TypedArrayViewMixin('float64', true)
-      : TypeViewMixin('float64', true);
-    field.length = field.View.getLength(size);
+  double() {
+    return TypeViewMixin('float64', true);
   },
 
-  binData: 'binary',
-
-  binary(field) {
-    field.View = TypedArrayViewMixin('uint8', true);
-    field.BSON = BSONView.BSON && BSONView.BSON.Binary;
+  binData() {
+    return BinaryView;
   },
 
-  objectId(field) {
-    const { size } = field;
-    field.View = size ? ArrayViewMixin(ObjectIdView) : ObjectIdView;
-    field.BSON = BSONView.BSON && BSONView.BSON.ObjectId;
-    field.length = field.View.getLength(size);
+  binary() {
+    return BinaryView;
   },
 
-  bool: 'boolean',
-
-  date(field) {
-    const { size } = field;
-    field.View = size ? ArrayViewMixin(DateView) : DateView;
-    field.length = field.View.getLength(size);
+  objectId() {
+    return ObjectIdView;
   },
 
-  regex(field) {
-    const { size } = field;
-    field.View = size ? ArrayViewMixin(RegexView) : RegexView;
+  bool() {
+    return BooleanView;
   },
 
-  javascript: 'string',
-
-  timestamp(field) {
-    const { size } = field;
-    field.View = size ? TypedArrayViewMixin('biguint64', true)
-      : TypeViewMixin('biguint64', true);
-    field.length = field.View.getLength(size);
+  date() {
+    return DateView;
   },
 
-  int(field) {
-    const { size } = field;
-    field.View = size ? TypedArrayViewMixin('int32', true)
-      : TypeViewMixin('int32', true);
-    field.length = field.View.getLength(size);
+  regex() {
+    return RegexView;
   },
 
-  long(field) {
-    const { size } = field;
-    field.View = size ? TypedArrayViewMixin('bigint64', true)
-      : TypeViewMixin('bigint64', true);
-    field.length = field.View.getLength(size);
+  javascript() {
+    return CodeView;
   },
 
+  timestamp() {
+    return TimestampView;
+  },
+
+  int() {
+    return TypeViewMixin('int32', true);
+  },
+
+  long() {
+    return LongView;
+  },
   // todo decimal
-  // todo long & timestamp & javascript toBSON
 };
 
 BSONView.encodedFields = undefined;
 
-BSONView.BSON = undefined;
-
 module.exports = (BSON) => {
-  BSONView.BSON = BSON;
+  ObjectIdView.BSON = BSON.ObjectId;
+  BinaryView.BSON = BSON.Binary;
+  CodeView.BSON = BSON.Code;
+  LongView.BSON = BSON.Long;
+  TimestampView.BSON = BSON.Timestamp;
   return BSONView;
 };
