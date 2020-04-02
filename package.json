@@ -1,8 +1,16 @@
 {
   "name": "bsonview",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Schema-based BSON using structurae's ObjectView binary protocol.",
   "main": "index.js",
+  "keywords": [
+    "BSON",
+    "binary protocol",
+    "schema",
+    "optimization",
+    "mongodb",
+    "structurae"
+  ],
   "directories": {
     "lib": "lib"
   },
@@ -25,16 +33,16 @@
     "url": "https://github.com/zandaqo/bsonview/issues"
   },
   "dependencies": {
-    "structurae": "^3.0.0"
+    "structurae": "^3.0.1"
   },
   "devDependencies": {
     "benchmark": "^2.1.4",
-    "bson": "^4.0.3",
+    "bson": "^4.0.4",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-plugin-import": "^2.20.1",
-    "jest": "^25.1.0",
-    "json-schema-faker": "^0.5.0-rc23"
+    "eslint-plugin-import": "^2.20.2",
+    "jest": "^25.2.6",
+    "json-schema-faker": "^0.5.0-rcv.24"
   },
   "jest": {
     "testEnvironment": "node",
