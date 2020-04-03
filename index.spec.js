@@ -1,8 +1,8 @@
-const { ObjectViewMixin } = require('structurae');
 const BSON = require('bson');
-const BSONView = require('./index')(BSON);
+globalThis.BSON = BSON;
 
-global.BSON = BSON;
+const { ObjectViewMixin } = require('structurae');
+const BSONView = require('./index');
 
 const SomeView = ObjectViewMixin({
   $id: 'SomeBson',

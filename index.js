@@ -230,11 +230,4 @@ BSONView.types = {
 
 BSONView.encodedFields = undefined;
 
-module.exports = (BSON) => {
-  ObjectIdView.BSON = BSON.ObjectId;
-  BinaryView.BSON = BSON.Binary;
-  CodeView.BSON = BSON.Code;
-  LongView.BSON = BSON.Long;
-  TimestampView.BSON = BSON.Timestamp;
-  return BSONView;
-};
+module.exports = BSONView;
