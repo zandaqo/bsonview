@@ -147,8 +147,7 @@ describe('BSONView', () => {
         j: new BSON.Timestamp(Number(json.j)),
         l: new BSON.Long(Number(json.l)),
       });
-      const views = ArrayViewMixin(SomeView).of(2);
-      SomeView.from(bson, views.getView(1));
+      const views = ArrayViewMixin(SomeView).from([bson, bson]);
       expect(views.get(1)).toEqual(json);
     });
   });

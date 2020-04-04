@@ -39,8 +39,8 @@ class BSONView extends ObjectView {
 
   static fromBSON(object, view, start = 0, length = this.objectLength) {
     const objectView = view || new this(this.defaultBuffer.slice());
-    const array = new Uint8Array(objectView.buffer, objectView.byteOffset + start, length);
-    if (view) array.fill(0);
+    const array = new Uint8Array(objectView.buffer);
+    if (view) array.fill(0, start, length);
     this.readBSONObject(object, 4, object.byteLength, array, start, this);
     return objectView;
   }
