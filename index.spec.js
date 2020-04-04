@@ -96,6 +96,34 @@ describe('BSONView', () => {
       const result = view.toJSON();
       expect(result).toEqual(json);
     });
+
+    it('skips fields in BSON that have conflicting types', () => {
+      const json = {
+        a: {},
+        b: 57.89,
+        c: [1.1, 3.3],
+        d: [5, 6, 100, 92, 67],
+        e: new BSON.ObjectID().toHexString(),
+        f: false,
+        g: new Date(),
+        h: new RegExp('abc', 'i'),
+        i: 'var a = 10',
+        j: 0n,
+        k: 156,
+        l: 0n,
+      };
+      const bson = BSON.serialize({
+        ...json,
+        d: Buffer.from(json.d),
+        e: new BSON.ObjectID(json.e),
+        i: new BSON.Code(json.i),
+        j: new BSON.Timestamp(Number(json.j)),
+        l: new BSON.Long(Number(json.l)),
+      });
+      const view = SomeView.from(bson);
+      const result = view.toJSON();
+      expect(result).toEqual({ ...json, a: 0 });
+    });
   });
 
   describe('toBSON', () => {

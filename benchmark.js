@@ -1,8 +1,10 @@
 const { ArrayViewMixin, ObjectViewMixin } = require('structurae');
 const BSON = require('bson');
+global.BSON = BSON;
+
 const Benchmark = require('benchmark');
 const jsf = require('json-schema-faker');
-const BSONView = require('./index')(BSON);
+const BSONView = require('./index');
 
 const benchmarkOptions = {
   onStart(event) {

@@ -1,5 +1,5 @@
 const {
-  ObjectView, StringView, TypeViewMixin, BooleanView,
+  ObjectView, StringView, TypeViewMixin, BooleanView, ArrayView,
 } = require('structurae');
 const ObjectIdView = require('./lib/objectid-view');
 const DateView = require('./lib/date-view');
@@ -89,7 +89,7 @@ class BSONView extends ObjectView {
   static readBSONObject(bson, view, View, length) {
     let caret = 0;
     let index = 0;
-    while (caret < bson.length - 1) {
+    while (caret < bson.byteLength - 1) {
       const elementType = bson[caret];
       if (!BSONTypes[elementType]) {
         throw new TypeError(`Type ${elementType} is not supported.`);
@@ -109,14 +109,19 @@ class BSONView extends ObjectView {
       let SubView = View;
       if (length) {
         start = index * length;
-        hasValue = start < view.length && valueLength;
+        hasValue = start < view.byteLength && valueLength;
       } else {
         const fieldName = this.getFieldName(bson.subarray(nameStart, nameEnd), View);
-        hasValue = fieldName && valueLength;
-        const fieldOptions = View.layout[fieldName];
-        start = fieldOptions.start;
-        fieldLength = fieldOptions.length;
-        SubView = fieldOptions.View;
+        if (fieldName) {
+          const fieldOptions = View.layout[fieldName];
+          start = fieldOptions.start;
+          fieldLength = fieldOptions.length;
+          SubView = fieldOptions.View;
+          const hasTypeConflict = ((elementType === 0x03
+            && !(SubView.prototype instanceof ObjectView))
+            || (elementType === 0x04 && !(SubView.prototype instanceof ArrayView)));
+          hasValue = !!valueLength && !hasTypeConflict;
+        }
       }
       if (hasValue) {
         this.writeBSONtoView(bson, elementType, valueStart,
@@ -155,7 +160,7 @@ class BSONView extends ObjectView {
 
   static getFieldName(name, View) {
     const { encodedFields, fields } = View;
-    const nameLength = name.length;
+    const nameLength = name.byteLength;
     outer: for (let i = 0; i < encodedFields.length; i++) {
       const fieldName = encodedFields[i];
       if (fieldName.length !== nameLength) continue;
@@ -164,7 +169,7 @@ class BSONView extends ObjectView {
       }
       return fields[i];
     }
-    return false;
+    return undefined;
   }
 
   static toBSON(view, start = 0) {
