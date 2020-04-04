@@ -69,6 +69,10 @@ const suits = [
     .add('JSON to View', () => {
       const object = objects[getIndex(100)];
       return CView.from(object);
+    })
+    .add('View to BSON', () => {
+      const index = getIndex(100);
+      return CView.toBSON(views, Views.itemLength * index);
     }),
   new Benchmark.Suite('Deserialize to JSON:', benchmarkOptions)
     .add('BSON to JSON', () => {

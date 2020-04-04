@@ -37,10 +37,11 @@ class BSONView extends ObjectView {
     return super.from(object, view, start, length);
   }
 
-  static fromBSON(object, view, start, length) {
+  static fromBSON(object, view, start = 0, length = this.objectLength) {
     const objectView = view || new this(this.defaultBuffer.slice());
-    if (view) new Uint8Array(view.buffer, view.byteOffset + start, length).fill(0);
-    this.readBSONObject(object.subarray(4), new Uint8Array(objectView.buffer), this);
+    const array = new Uint8Array(objectView.buffer, objectView.byteOffset + start, length);
+    if (view) array.fill(0);
+    this.readBSONObject(object, 4, object.byteLength, array, start, this);
     return objectView;
   }
 
@@ -86,10 +87,10 @@ class BSONView extends ObjectView {
     }
   }
 
-  static readBSONObject(bson, view, View, length) {
-    let caret = 0;
+  static readBSONObject(bson, begin, end, view, offset, View, itemLength) {
+    let caret = begin;
     let index = 0;
-    while (caret < bson.byteLength - 1) {
+    while (caret < end - 1) {
       const elementType = bson[caret];
       if (!BSONTypes[elementType]) {
         throw new TypeError(`Type ${elementType} is not supported.`);
@@ -105,16 +106,16 @@ class BSONView extends ObjectView {
       caret = valueStart + valueLength;
       let start = 0;
       let hasValue = false;
-      let fieldLength = length;
+      let fieldLength = itemLength;
       let SubView = View;
-      if (length) {
-        start = index * length;
+      if (itemLength) { // it's an array
+        start = offset + index * itemLength;
         hasValue = start < view.byteLength && valueLength;
       } else {
-        const fieldName = this.getFieldName(bson.subarray(nameStart, nameEnd), View);
+        const fieldName = this.getFieldName(bson, nameStart, nameEnd - nameStart, View);
         if (fieldName) {
           const fieldOptions = View.layout[fieldName];
-          start = fieldOptions.start;
+          start = offset + fieldOptions.start;
           fieldLength = fieldOptions.length;
           SubView = fieldOptions.View;
           const hasTypeConflict = ((elementType === 0x03
@@ -137,12 +138,12 @@ class BSONView extends ObjectView {
         view[start] = bson[valueStart];
         break;
       case 0x03: // document
-        this.readBSONObject(bson.subarray(valueStart, valueStart + valueLength),
-          view.subarray(start, start + length), View);
+        this.readBSONObject(bson, valueStart, valueStart + valueLength,
+          view, start, View);
         break;
       case 0x04: // array
-        this.readBSONObject(bson.subarray(valueStart, valueStart + valueLength),
-          view.subarray(start, start + length), View, View.getLength(1));
+        this.readBSONObject(bson, valueStart, valueStart + valueLength,
+          view, start, View, View.itemLength);
         break;
       default:
         const minLength = valueLength > length ? length : valueLength;
@@ -158,14 +159,13 @@ class BSONView extends ObjectView {
     this.encodedFields = this.fields.map((name) => StringView.encoder.encode(name));
   }
 
-  static getFieldName(name, View) {
+  static getFieldName(bson, begin, length, View) {
     const { encodedFields, fields } = View;
-    const nameLength = name.byteLength;
     outer: for (let i = 0; i < encodedFields.length; i++) {
       const fieldName = encodedFields[i];
-      if (fieldName.length !== nameLength) continue;
-      for (let j = 0; j < nameLength; j++) {
-        if (fieldName[j] !== name[j]) continue outer;
+      if (fieldName.length !== length) continue;
+      for (let j = 0; j < length; j++) {
+        if (fieldName[j] !== bson[begin + j]) continue outer;
       }
       return fields[i];
     }

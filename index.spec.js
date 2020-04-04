@@ -1,7 +1,7 @@
 const BSON = require('bson');
 globalThis.BSON = BSON;
 
-const { ObjectViewMixin } = require('structurae');
+const { ObjectViewMixin, ArrayViewMixin } = require('structurae');
 const BSONView = require('./index');
 
 const SomeView = ObjectViewMixin({
@@ -73,7 +73,7 @@ describe('BSONView', () => {
       const json = {
         a: 6,
         b: 57.89,
-        c: [1.1, 3.3],
+        c: [2.5, 4.6],
         d: [5, 6, 100, 92, 67],
         e: new BSON.ObjectID().toHexString(),
         f: false,
@@ -93,8 +93,7 @@ describe('BSONView', () => {
         l: new BSON.Long(Number(json.l)),
       });
       const view = SomeView.from(bson);
-      const result = view.toJSON();
-      expect(result).toEqual(json);
+      expect(view.toJSON()).toEqual(json);
     });
 
     it('skips fields in BSON that have conflicting types', () => {
@@ -123,6 +122,34 @@ describe('BSONView', () => {
       const view = SomeView.from(bson);
       const result = view.toJSON();
       expect(result).toEqual({ ...json, a: 0 });
+    });
+
+    it('uses an existing view when provided', () => {
+      const json = {
+        a: 7,
+        b: 57.89,
+        c: [1.1, 3.3],
+        d: [5, 6, 100, 92, 67],
+        e: new BSON.ObjectID().toHexString(),
+        f: false,
+        g: new Date(),
+        h: new RegExp('abc', 'i'),
+        i: 'var a = 10',
+        j: 0n,
+        k: 156,
+        l: 0n,
+      };
+      const bson = BSON.serialize({
+        ...json,
+        d: Buffer.from(json.d),
+        e: new BSON.ObjectID(json.e),
+        i: new BSON.Code(json.i),
+        j: new BSON.Timestamp(Number(json.j)),
+        l: new BSON.Long(Number(json.l)),
+      });
+      const views = ArrayViewMixin(SomeView).of(2);
+      SomeView.from(bson, views.getView(1));
+      expect(views.get(1)).toEqual(json);
     });
   });
 
