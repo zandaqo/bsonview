@@ -1,6 +1,7 @@
 const {
-  ObjectView, StringView, TypeViewMixin, BooleanView, ArrayView,
+  ObjectView, ArrayView, BooleanView, StringView, TypeView,
 } = require('structurae');
+const TypeViewMixin = require('./lib/type-view-mixin');
 const ObjectIdView = require('./lib/objectid-view');
 const DateView = require('./lib/date-view');
 const RegexView = require('./lib/regex-view');
@@ -9,7 +10,27 @@ const CodeView = require('./lib/code-view');
 const LongView = require('./lib/long-view');
 const TimestampView = require('./lib/timestamp-view');
 
-const BSONTypes = {
+TypeView.toBSON = function(view, start) {
+  const value = this.toJSON(view, start);
+  return new this.BSON(value);
+};
+
+BooleanView.toBSON = StringView.toBSON = function(view, start, length) {
+  return this.toJSON(view, start, length);
+};
+
+ArrayView.toBSON = function(view, start, length) {
+  const { View, itemLength } = this;
+  const size = this.getSize(length);
+  const array = new Array(size);
+  for (let i = 0; i < size; i++) {
+    const offset = this.getLength(i);
+    array[i] = View.toBSON(view, start + offset, itemLength);
+  }
+  return array;
+};
+
+const supportedBSONTypes = {
   0x01: 1, // double
   0x02: 1, // string
   0x03: 1, // document
@@ -92,7 +113,7 @@ class BSONView extends ObjectView {
     let index = 0;
     while (caret < end - 1) {
       const elementType = bson[caret];
-      if (!BSONTypes[elementType]) {
+      if (!Reflect.has(supportedBSONTypes, elementType)) {
         throw new TypeError(`Type ${elementType} is not supported.`);
       }
       const elementLength = this.hasBSONLength(elementType) ? 4 : 0;
@@ -110,6 +131,7 @@ class BSONView extends ObjectView {
       let SubView = View;
       if (itemLength) { // it's an array
         start = offset + index * itemLength;
+        SubView = View.View;
         hasValue = start < view.byteLength && valueLength;
       } else {
         const fieldName = this.getFieldName(bson, nameStart, nameEnd - nameStart, View);
@@ -154,9 +176,19 @@ class BSONView extends ObjectView {
     }
   }
 
-  static initialize() {
-    super.initialize();
-    this.encodedFields = this.fields.map((name) => StringView.encoder.encode(name));
+  static initialize(ParentViewClass = BSONView) {
+    const { schema } = this;
+    const schemas = this.getSchemaOrdering(schema);
+    for (let i = schemas.length - 1; i >= 0; i--) {
+      const objectSchema = schemas[i];
+      const id = objectSchema.$id;
+      if (Reflect.has(ObjectView.Views, id)) continue;
+      const View = i === 0 ? this : class extends ParentViewClass {};
+      [View.layout, View.objectLength, View.fields] = this.getLayoutFromSchema(objectSchema);
+      ObjectView.Views[id] = View;
+      View.encodedFields = View.fields.map((name) => StringView.encoder.encode(name));
+      View.setDefaultBuffer();
+    }
   }
 
   static getFieldName(bson, begin, length, View) {
@@ -178,17 +210,33 @@ class BSONView extends ObjectView {
     for (let i = 0; i < fields.length; i++) {
       const name = fields[i];
       const { View, start: fieldStart, length: fieldLength } = layout[name];
-      result[name] = View.toBSON ? View.toBSON(view, start + fieldStart, fieldLength)
-        : View.toJSON(view, start + fieldStart, fieldLength);
+      result[name] = View.toBSON(view, start + fieldStart, fieldLength);
     }
     return result;
   }
 }
 
 BSONView.types = {
-  ...ObjectView.types,
+  boolean() {
+    return BooleanView;
+  },
+
+  string() {
+    return StringView;
+  },
+
+  number(field) {
+    const { btype = 'float64' } = field;
+    return TypeViewMixin(btype);
+  },
+
+  integer(field) {
+    const { btype = 'int32' } = field;
+    return TypeViewMixin(btype);
+  },
+
   double() {
-    return TypeViewMixin('float64', true);
+    return TypeViewMixin('float64');
   },
 
   binData() {
@@ -224,7 +272,7 @@ BSONView.types = {
   },
 
   int() {
-    return TypeViewMixin('int32', true);
+    return TypeViewMixin('int32');
   },
 
   long() {
