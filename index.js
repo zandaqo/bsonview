@@ -1,5 +1,5 @@
 const {
-  ObjectView, ArrayView, BooleanView, StringView, TypeView,
+  ObjectView, ArrayView, BooleanView, StringView, TypeView, ArrayViewMixin,
 } = require('structurae');
 const TypeViewMixin = require('./lib/type-view-mixin');
 const ObjectIdView = require('./lib/objectid-view');
@@ -213,6 +213,10 @@ class BSONView extends ObjectView {
       result[name] = View.toBSON(view, start + fieldStart, fieldLength);
     }
     return result;
+  }
+
+  static Array() {
+    return ArrayViewMixin(this);
   }
 }
 

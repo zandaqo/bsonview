@@ -146,4 +146,12 @@ describe('BSONView', () => {
     });
   });
 
+  describe('Array', () => {
+    it('returns an array view class of the bson view', () => {
+      const ExampleArray = ArrayViewMixin(ExampleBSONView);
+      expect(ExampleBSONView.Array()).toBe(ExampleArray);
+      expect(ExampleBSONView.Array()).toBe(ExampleArray);
+    });
+  });
+
 });
