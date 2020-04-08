@@ -49,8 +49,13 @@ const supportedBSONTypes = {
 };
 
 class BSONView extends ObjectView {
-  toBSON() {
-    return this.constructor.toBSON(this);
+  getBSON(field) {
+    const { View, start, length } = this.constructor.layout[field];
+    return View.toBSON(this, start, length);
+  }
+
+  toBSON(fields) {
+    return this.constructor.toBSON(this, 0, 0, fields);
   }
 
   static from(object, view, start, length) {
@@ -204,8 +209,8 @@ class BSONView extends ObjectView {
     return undefined;
   }
 
-  static toBSON(view, start = 0) {
-    const { fields, layout } = this;
+  static toBSON(view, start = 0, length, fields = this.fields) {
+    const { layout } = this;
     const result = {};
     for (let i = 0; i < fields.length; i++) {
       const name = fields[i];
@@ -215,7 +220,7 @@ class BSONView extends ObjectView {
     return result;
   }
 
-  static Array() {
+  static get Array() {
     return ArrayViewMixin(this);
   }
 }

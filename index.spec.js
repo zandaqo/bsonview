@@ -107,6 +107,15 @@ describe('BSONView', () => {
     bson = BSON.serialize(toBson);
   });
 
+  describe('toBSON', () => {
+    it('returns a BSON value of a field', () => {
+      const view = ExampleBSONView.from(json);
+      expect(view.getBSON('e')).toEqual(toBson.e);
+      expect(view.getBSON('a')).toEqual(toBson.a);
+      expect(view.getBSON('m')).toEqual(toBson.m);
+    });
+  });
+
   describe('from', () => {
     it('creates a default view from an empty object', () => {
       const view = ExampleBSONView.from({});
@@ -139,18 +148,25 @@ describe('BSONView', () => {
   });
 
   describe('toBSON', () => {
-    it('converts view into an object for BSON serialization', () => {
+    it('converts a view into an object for BSON serialization', () => {
       const view = ExampleBSONView.from(json);
       const result = view.toBSON();
       expect(result).toEqual(toBson);
+    });
+
+    it('converts a list of specified fields of a view into an object for BSON serialization', () => {
+      const view = ExampleBSONView.from(json);
+      const { a, b, c, d, e, f, g, ...subsetBson } = toBson;
+      const result = view.toBSON(['h', 'i', 'j', 'k', 'l', 'm', 'n', 'o']);
+      expect(result).toEqual(subsetBson);
     });
   });
 
   describe('Array', () => {
     it('returns an array view class of the bson view', () => {
       const ExampleArray = ArrayViewMixin(ExampleBSONView);
-      expect(ExampleBSONView.Array()).toBe(ExampleArray);
-      expect(ExampleBSONView.Array()).toBe(ExampleArray);
+      expect(ExampleBSONView.Array).toBe(ExampleArray);
+      expect(ExampleBSONView.Array).toBe(ExampleArray);
     });
   });
 
