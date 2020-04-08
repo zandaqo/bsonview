@@ -1,11 +1,11 @@
 const BSON = require('bson');
 globalThis.BSON = BSON;
 
-const { ObjectViewMixin, ArrayViewMixin } = require('structurae');
-const BSONView = require('./index');
+const { ObjectViewMixin, ArrayViewMixin, MapViewMixin } = require('structurae');
+const { BSONObjectView, BSONMapView } = require('./index');
 
 const ExampleBSONView = ObjectViewMixin({
-  $id: 'Example',
+  $id: 'ExampleObject',
   type: 'object',
   properties: {
     a: { type: 'integer', btype: 'uint8' },
@@ -39,7 +39,7 @@ const ExampleBSONView = ObjectViewMixin({
     },
     o: { type: 'string', maxLength: 10, default: 'abc' },
   },
-}, BSONView);
+}, BSONObjectView);
 
 const defaultView = {
   a: 0,
@@ -59,7 +59,7 @@ const defaultView = {
   o: 'abc',
 };
 
-describe('BSONView', () => {
+describe('BSONObjectView', () => {
   let json = undefined;
   let bson = undefined;
   let toBson = undefined;
@@ -169,5 +169,25 @@ describe('BSONView', () => {
       expect(ExampleBSONView.Array).toBe(ExampleArray);
     });
   });
+});
 
+describe('BSONMapView', () => {
+  const ExampleBSONMapView = MapViewMixin({
+    $id: 'ExampleMap',
+    type: 'object',
+    properties: {
+      o: { $ref: '#ExampleObject' },
+      p: { type: 'string' },
+      q: { type: 'number' },
+    }
+  }, BSONMapView, BSONObjectView);
+
+  describe('toBSON', () => {
+    it('converts a map view into an object for BSON serialization', () => {
+      const view = ExampleBSONMapView.from({ o: {}, p: 'abc' });
+      const bson = view.toBSON();
+      expect(bson.p).toBe('abc');
+      expect(bson.q).toBe(null);
+    });
+  });
 });
