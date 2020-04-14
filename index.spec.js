@@ -4,42 +4,45 @@ globalThis.BSON = BSON;
 const { ObjectViewMixin, ArrayViewMixin, MapViewMixin } = require('structurae');
 const { BSONObjectView, BSONMapView } = require('./index');
 
-const ExampleBSONView = ObjectViewMixin({
-  $id: 'ExampleObject',
-  type: 'object',
-  properties: {
-    a: { type: 'integer', btype: 'uint8' },
-    b: { type: 'number', btype: 'float64', default: 4 },
-    c: {
-      type: 'array',
-      maxItems: 2,
-      items: { type: 'double' },
-      default: [1, 3],
-    },
-    d: { type: 'binary', maxLength: 5 },
-    e: { type: 'objectId' },
-    f: { type: 'boolean', default: true },
-    g: { type: 'date' },
-    h: { type: 'regex', maxLength: 6 },
-    i: { type: 'javascript', maxLength: 10 },
-    j: { type: 'timestamp' },
-    k: { type: 'int' },
-    l: { type: 'long' },
-    m: {
-      $id: 'NestedObject',
-      type: 'object',
-      properties: {
-        a: { type: 'objectId' },
+const ExampleBSONView = ObjectViewMixin(
+  {
+    $id: 'ExampleObject',
+    type: 'object',
+    properties: {
+      a: { type: 'integer', btype: 'uint8' },
+      b: { type: 'number', btype: 'float64', default: 4 },
+      c: {
+        type: 'array',
+        maxItems: 2,
+        items: { type: 'double' },
+        default: [1, 3],
       },
+      d: { type: 'binary', maxLength: 5 },
+      e: { type: 'objectId' },
+      f: { type: 'boolean', default: true },
+      g: { type: 'date' },
+      h: { type: 'regex', maxLength: 6 },
+      i: { type: 'javascript', maxLength: 10 },
+      j: { type: 'timestamp' },
+      k: { type: 'int' },
+      l: { type: 'long' },
+      m: {
+        $id: 'NestedObject',
+        type: 'object',
+        properties: {
+          a: { type: 'objectId' },
+        },
+      },
+      n: {
+        type: 'array',
+        maxItems: 3,
+        items: { $ref: '#NestedObject' },
+      },
+      o: { type: 'string', maxLength: 10, default: 'abc' },
     },
-    n: {
-      type: 'array',
-      maxItems: 3,
-      items: { $ref: '#NestedObject' },
-    },
-    o: { type: 'string', maxLength: 10, default: 'abc' },
   },
-}, BSONObjectView);
+  BSONObjectView,
+);
 
 const defaultView = {
   a: 0,
@@ -49,13 +52,17 @@ const defaultView = {
   e: '000000000000000000000000',
   f: true,
   g: new Date(0),
-  h: new RegExp(),
+  h: new RegExp(''),
   i: '',
   j: 0n,
   k: 0,
   l: 0n,
   m: { a: '000000000000000000000000' },
-  n: [{ a: '000000000000000000000000' }, { a: '000000000000000000000000' }, { a: '000000000000000000000000' }],
+  n: [
+    { a: '000000000000000000000000' },
+    { a: '000000000000000000000000' },
+    { a: '000000000000000000000000' },
+  ],
   o: 'abc',
 };
 
@@ -172,15 +179,19 @@ describe('BSONObjectView', () => {
 });
 
 describe('BSONMapView', () => {
-  const ExampleBSONMapView = MapViewMixin({
-    $id: 'ExampleMap',
-    type: 'object',
-    properties: {
-      o: { $ref: '#ExampleObject' },
-      p: { type: 'string' },
-      q: { type: 'number' },
-    }
-  }, BSONMapView, BSONObjectView);
+  const ExampleBSONMapView = MapViewMixin(
+    {
+      $id: 'ExampleMap',
+      type: 'object',
+      properties: {
+        o: { $ref: '#ExampleObject' },
+        p: { type: 'string' },
+        q: { type: 'number' },
+      },
+    },
+    BSONMapView,
+    BSONObjectView,
+  );
 
   describe('toBSON', () => {
     it('converts a map view into an object for BSON serialization', () => {

@@ -1,6 +1,4 @@
-const {
-  ArrayView, BooleanView, StringView, TypeView,
-} = require('structurae');
+const { ArrayView, BooleanView, StringView, TypeView } = require('structurae');
 const ObjectIdView = require('./lib/objectid-view');
 const DateView = require('./lib/date-view');
 const RegexView = require('./lib/regex-view');

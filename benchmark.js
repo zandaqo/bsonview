@@ -1,5 +1,6 @@
 const { ArrayViewMixin, ObjectViewMixin } = require('structurae');
 const BSON = require('bson');
+
 global.BSON = BSON;
 
 const Benchmark = require('benchmark');
@@ -25,7 +26,10 @@ const JSONSchema = {
   type: 'object',
   properties: {
     type: {
-      type: 'integer', btype: 'uint8', minimum: 0, maximum: 255,
+      type: 'integer',
+      btype: 'uint8',
+      minimum: 0,
+      maximum: 255,
     },
     id: { type: 'integer' },
     name: { type: 'string', minLength: 5, maxLength: 50 },
