@@ -1,6 +1,6 @@
 {
   "name": "bsonview",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Schema-based BSON using structurae's ObjectView binary protocol.",
   "main": "index.js",
   "keywords": [

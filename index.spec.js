@@ -39,6 +39,7 @@ const ExampleBSONView = ObjectViewMixin(
         items: { $ref: '#NestedObject' },
       },
       o: { type: 'string', maxLength: 10, default: 'abc' },
+      p: { type: 'decimal128' },
     },
   },
   BSONObjectView,
@@ -64,6 +65,7 @@ const defaultView = {
     { a: '000000000000000000000000' },
   ],
   o: 'abc',
+  p: new Array(16).fill(0),
 };
 
 describe('BSONObjectView', () => {
@@ -92,6 +94,7 @@ describe('BSONObjectView', () => {
         { a: new BSON.ObjectID().toHexString() },
       ],
       o: 'defgh',
+      p: Array.from(BSON.Decimal128.fromString('123').bytes),
     };
     toBson = {
       ...json,
@@ -110,6 +113,7 @@ describe('BSONObjectView', () => {
         { a: new BSON.ObjectID(json.n[1].a) },
         { a: new BSON.ObjectID(json.n[2].a) },
       ],
+      p: BSON.Decimal128.fromString('123'),
     };
     bson = BSON.serialize(toBson);
   });
@@ -163,7 +167,7 @@ describe('BSONObjectView', () => {
 
     it('converts a list of specified fields of a view into an object for BSON serialization', () => {
       const view = ExampleBSONView.from(json);
-      const { a, b, c, d, e, f, g, ...subsetBson } = toBson;
+      const { a, b, c, d, e, f, g, p, ...subsetBson } = toBson;
       const result = view.toBSON(['h', 'i', 'j', 'k', 'l', 'm', 'n', 'o']);
       expect(result).toEqual(subsetBson);
     });
