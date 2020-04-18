@@ -5,7 +5,7 @@ global.BSON = BSON;
 
 const Benchmark = require('benchmark');
 const jsf = require('json-schema-faker');
-const BSONView = require('./index');
+const { BSONObjectView } = require('./index');
 
 const benchmarkOptions = {
   onStart(event) {
@@ -49,7 +49,7 @@ const JSONSchema = {
   required: ['type', 'id', 'name', 'weight', 'height', 'scores'],
 };
 
-const CView = ObjectViewMixin(JSONSchema, BSONView);
+const CView = ObjectViewMixin(JSONSchema, BSONObjectView);
 
 const objects = [];
 const bsons = [];
